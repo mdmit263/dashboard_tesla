@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tesla Delivery Portal — REV Engineering</title>
+<style>
+  :root{
+    --rev-navy:#0B2545; --rev-blue:#1D4E89; --rev-teal:#0E8A7D; --rev-gold:#D9A441;
+    --bg:#F3F5F8; --panel:#FFFFFF; --border:#E2E8F0; --text:#111827; --text-muted:#64748B; --text-faint:#94A3B8;
+    --green:#15803D; --green-bg:#DCFCE7; --amber:#B45309; --amber-bg:#FEF3C7; --red:#B91C1C; --red-bg:#FEE2E2;
+    --slate:#475569; --slate-bg:#E8EDF3; --blue-bg:#DCE8F7;
+    --c-ship:#15803D; --c-ready:#0E8A7D; --c-plan:#1D4E89; --c-sched:#94A3B8; --c-wait:#CBD5E1;
+    --shadow:0 1px 2px rgba(15,23,42,.06),0 1px 1px rgba(15,23,42,.04);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;}
+  body{padding-bottom:50px;}
+  .bar{background:var(--rev-navy);padding:10px 32px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:14px;margin-right:auto;}
+  .logo{width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,var(--rev-gold),var(--rev-teal));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:var(--rev-navy);}
+  .seg{display:flex;background:rgba(255,255,255,.08);border-radius:9px;padding:3px;gap:2px;}
+  .seg button{border:none;background:transparent;color:rgba(255,255,255,.65);font-size:12.5px;font-weight:700;padding:7px 16px;border-radius:7px;cursor:pointer;font-family:inherit;}
+  .seg button.active{background:#fff;color:var(--rev-navy);}
+  .note{font-size:11px;color:rgba(255,255,255,.5);}
+  .view{display:none;} .view.active{display:block;}
+  .hero{background:linear-gradient(135deg,var(--rev-navy),var(--rev-blue));color:#fff;padding:36px 32px 70px;}
+  .hero-in{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;}
+  .hero h1{margin:0 0 6px;font-size:26px;font-weight:800;letter-spacing:-.01em;}
+  .hero .sub{font-size:13.5px;color:rgba(255,255,255,.75);max-width:580px;line-height:1.5;}
+  .hero .meta{font-size:12px;color:rgba(255,255,255,.65);text-align:right;line-height:1.7;} .hero .meta b{color:#fff;}
+  .body{max-width:1400px;margin:0 auto;padding:0 32px;}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:-52px;}
+  .kpi{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:0 10px 24px rgba(11,37,69,.12);cursor:pointer;transition:transform .12s;}
+  .kpi:hover{transform:translateY(-2px);} .kpi.active{border-color:var(--rev-blue);box-shadow:0 0 0 2px rgba(29,78,137,.18);}
+  .kpi .v{font-size:28px;font-weight:800;color:var(--rev-navy);letter-spacing:-.02em;}
+  .kpi .l{font-size:12px;color:var(--text-muted);font-weight:600;margin-top:5px;}
+  .kpi .s{font-size:11px;color:var(--text-faint);margin-top:2px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+  .panel{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:20px 22px;margin-top:16px;}
+  .grid .panel{margin-top:0;}
+  .panel h2{margin:0 0 2px;font-size:14.5px;font-weight:700;color:var(--rev-navy);}
+  .panel .ps{font-size:11.5px;color:var(--text-muted);margin-bottom:14px;}
+  .label{margin:26px 0 10px;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--rev-navy);}
+  .stack{display:flex;height:34px;border-radius:9px;overflow:hidden;gap:2px;margin:6px 0 14px;}
+  .stack div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;cursor:pointer;min-width:0;transition:opacity .12s;}
+  .stack div:hover{opacity:.85;}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:11.5px;color:var(--text-muted);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;cursor:pointer;} .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+  svg text{font-family:inherit;} .ax{font-size:10.5px;fill:#8A97A8;}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 12px;}
+  .toolbar input,.toolbar select{border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--text);}
+  .toolbar input{min-width:230px;}
+  .count{margin-left:auto;font-size:12px;color:var(--text-muted);}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--blue-bg);color:var(--rev-blue);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;}
+  .chip b{cursor:pointer;font-size:14px;line-height:1;}
+  #iBody td{white-space:nowrap;} #iBody td.nt{white-space:normal;min-width:280px;max-width:340px;color:#64748B;}
+  .tw{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:auto;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{background:var(--rev-navy);color:#fff;text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:11px 12px;white-space:nowrap;position:sticky;top:0;}
+  td{padding:11px 12px;border-top:1px solid #EEF2F7;vertical-align:top;}
+  tr.row{cursor:pointer;} tr.row:hover td{background:#F8FAFC;}
+  .mono{font-family:"SFMono-Regular",Consolas,monospace;font-weight:700;font-size:12px;}
+  .pill{display:inline-flex;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;}
+  .p-ship{background:var(--green-bg);color:var(--green);} .p-ready{background:#D5F2EE;color:#0B6F65;} .p-plan{background:var(--blue-bg);color:var(--rev-blue);}
+  .p-sched{background:var(--slate-bg);color:var(--slate);} .p-wait{background:#F1F5F9;color:var(--text-faint);}
+  .p-ok{background:var(--green-bg);color:var(--green);} .p-soon{background:var(--amber-bg);color:var(--amber);} .p-na{background:#F1F5F9;color:var(--text-faint);}
+  .xr td{background:#F8FAFC;padding:14px 18px;}
+  .dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 24px;}
+  .dl div span{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);font-weight:700;}
+  .dl div b{font-size:12.5px;font-weight:600;color:var(--text);}
+  .foot{text-align:center;padding:26px 20px 6px;color:var(--text-faint);font-size:11.5px;} .foot b{color:var(--rev-navy);}
+  .fn{font-size:11.5px;color:var(--text-faint);margin:10px 4px 0;line-height:1.5;}
+  .flag{display:flex;gap:10px;padding:9px 0;border-top:1px solid #EEF2F7;font-size:12.5px;line-height:1.45;} .flag:first-child{border-top:none;}
+  .flag .tag{flex:0 0 auto;font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px;height:fit-content;margin-top:1px;}
+  .t-hi{background:var(--red-bg);color:var(--red);} .t-md{background:var(--amber-bg);color:var(--amber);} .t-lo{background:var(--slate-bg);color:var(--slate);}
+  .badge-int{background:#FEF3C7;color:#92400E;font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;margin-left:10px;vertical-align:middle;}
+  #tip{position:fixed;pointer-events:none;background:#0B2545;color:#fff;font-size:12px;line-height:1.5;padding:8px 11px;border-radius:8px;display:none;z-index:50;box-shadow:0 6px 16px rgba(0,0,0,.25);}
+  .sb{position:fixed;inset:0;background:rgba(7,26,51,.45);display:none;z-index:60;}
+  .sb.open{display:block;}
+  .sheet{position:absolute;top:0;right:0;bottom:0;width:min(600px,100%);background:#fff;box-shadow:-12px 0 40px rgba(7,26,51,.25);display:flex;flex-direction:column;animation:slide .18s ease-out;}
+  @keyframes slide{from{transform:translateX(30px);opacity:.4}to{transform:none;opacity:1}}
+  .sh{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start;}
+  .sh h3{margin:0;font-size:18px;color:var(--rev-navy);letter-spacing:-.01em;} .sh .ss{font-size:12.5px;color:var(--text-muted);margin-top:3px;}
+  .sh .nav{margin-left:auto;display:flex;gap:6px;flex:0 0 auto;}
+  .ib{border:1px solid var(--border);background:#fff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:14px;color:var(--rev-navy);font-family:inherit;}
+  .ib:hover{background:#F1F5F9;} .ib:disabled{opacity:.35;cursor:default;}
+  .sbody{padding:18px 22px 26px;overflow:auto;flex:1;}
+  .banner{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#F8FAFC;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:16px;}
+  .banner .nx{font-size:12.5px;color:var(--text);line-height:1.45;flex:1;min-width:200px;}
+  .sec{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--rev-navy);margin:20px 0 9px;}
+  .tl{position:relative;margin:4px 0 0 8px;} .tl .st{display:flex;gap:14px;padding-bottom:16px;position:relative;}
+  .tl .st:not(:last-child)::before{content:"";position:absolute;left:6px;top:15px;bottom:-1px;width:2px;background:#E2E8F0;}
+  .tl .st.done:not(:last-child)::before{background:var(--c-ready);}
+  .tl .dot{width:14px;height:14px;border-radius:50%;border:2px solid #CBD5E1;background:#fff;flex:0 0 auto;margin-top:2px;position:relative;z-index:1;}
+  .tl .st.done .dot{background:var(--c-ready);border-color:var(--c-ready);} .tl .st.cur .dot{border-color:var(--rev-blue);box-shadow:0 0 0 4px rgba(29,78,137,.15);background:#fff;}
+  .tl .tt{font-size:13px;font-weight:700;color:var(--text);} .tl .td{font-size:11.5px;color:var(--text-muted);margin-top:1px;} .tl .st.todo .tt{color:var(--text-faint);}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .cd{border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
+  .cd h4{margin:0 0 8px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint);}
+  .kv{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:3px 0;} .kv span{color:var(--text-muted);} .kv b{font-weight:600;text-align:right;}
+  .nbox{background:#FFFBEB;border:1px solid #FDE68A;color:#78350F;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;margin-top:8px;}
+  .lrow{display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:7px;cursor:pointer;}
+  .lrow:hover{background:#F8FAFC;border-color:#CBD5E1;} .lrow .mono{min-width:96px;} .lrow .lm{flex:1;min-width:0;} .lrow .lm b{display:block;font-size:13px;} .lrow .lm span{font-size:11.5px;color:var(--text-muted);}
+  .mini{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;} .mini div{background:#F1F5F9;border-radius:8px;padding:6px 11px;font-size:11.5px;color:var(--slate);} .mini b{color:var(--rev-navy);font-size:14px;margin-right:4px;}
+  th[data-sort]{cursor:pointer;user-select:none;} th[data-sort]:hover{background:#12335F;}
+  [data-job],[data-month],[data-prov],[data-brk],[data-flag]{cursor:pointer;}
+  .flag[data-job]:hover{background:#F8FAFC;} svg rect[data-month]:hover,svg rect[data-prov]:hover,svg rect[data-brk]:hover{filter:brightness(1.12);}
+  .btn{border:1px solid var(--border);background:#fff;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;color:var(--rev-navy);cursor:pointer;font-family:inherit;} .btn:hover{background:#F1F5F9;}
+  @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr);}.grid{grid-template-columns:1fr;}.body,.hero,.bar{padding-left:16px;padding-right:16px;}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="brand"><div class="logo">RE</div>REV Engineering · Tesla Delivery Portal</div>
+  <div class="seg"><button id="bC" class="active">Customer Portal</button><button id="bI">Internal — REV Team</button></div>
+  <div class="note" id="note">Customer view · data as of Oct 8, 2026</div>
+</div>
+
+<!-- ============ CUSTOMER ============ -->
+<div class="view active" id="cust">
+  <div class="hero"><div class="hero-in">
+    <div><h1>Tesla Delivery Portal</h1><div class="sub">Production and shipment status for your switchboard order across all sites. Updated as units become ready and ship.</div></div>
+    <div class="meta">PO <b>489</b> &middot; Job <b>M200489</b><br>As of <b>Oct 8, 2026</b></div>
+  </div></div>
+  <div class="body">
+    <div class="kpis" id="cKpis"></div>
+    <div class="label">Order Status</div>
+    <div class="panel" style="margin-top:0">
+      <h2>Where each site stands</h2><div class="ps">Click a segment for the site list &middot; legend items filter the table below</div>
+      <div class="stack" id="cStack"></div><div class="legend" id="cLegend"></div>
+    </div>
+    <div class="grid">
+      <div class="panel"><h2>Planned ship dates by month</h2><div class="ps">Click a bar to see its sites &middot; line shows the running total</div><svg id="cMonth" width="100%" viewBox="0 0 640 230"></svg></div>
+      <div class="panel"><h2>Sites by province</h2><div class="ps">Click a bar or province for its sites</div><svg id="cProv" width="100%" viewBox="0 0 640 230"></svg></div>
+    </div>
+    <div class="label">Site List<span style="text-transform:none;font-weight:600;color:var(--text-faint);letter-spacing:0"> &mdash; click a site for full details; click a column to sort</span></div>
+    <div class="toolbar"><input id="cQ" placeholder="Search site, job or PO&hellip;"><select id="cProvSel"></select><select id="cStatSel"></select><span id="cChips"></span><button class="btn" id="cCsv">Export CSV</button><div class="count" id="cCount"></div></div>
+    <div class="tw"><table><thead><tr><th></th><th data-sort="job">Job</th><th data-sort="location">Site</th><th data-sort="sw">Switchboard</th><th data-sort="tfx">Transformer</th><th data-sort="brk">Breakers</th><th data-sort="status">Status</th><th data-sort="plan">Planned Ship</th><th data-sort="ship">Shipped</th></tr></thead><tbody id="cBody"></tbody></table></div>
+    <div class="fn">Planned Ship is REV's current plan and may move. A date range means the shipment window. &ldquo;Awaiting Details&rdquo; = site specifications still to be confirmed.</div>
+    <div class="foot">Questions about your order? Contact your <b>REV Engineering</b> account team.</div>
+  </div>
+</div>
+
+<!-- ============ INTERNAL ============ -->
+<div class="view" id="intl">
+  <div class="body" style="padding-top:24px">
+    <h1 style="margin:0 0 4px;font-size:22px;color:var(--rev-navy)">Tesla PO 489 — Internal Tracker<span class="badge-int">INTERNAL</span></h1>
+    <div style="font-size:12.5px;color:var(--text-muted)">Source: Tesla PO Tracker (Sheet1) + Breaker Delivery tab (dated Sep 9, 2026) &middot; shown as of Oct 8, 2026</div>
+    <div class="kpis" style="margin-top:18px" id="iKpis"></div>
+    <div class="grid">
+      <div class="panel"><h2>Data to confirm</h2><div class="ps">Gaps and conflicts found in the tracker</div><div id="iFlags"></div></div>
+      <div class="panel"><h2>Breaker readiness</h2><div class="ps">From the Breaker Delivery tab</div><svg id="iBrk" width="100%" viewBox="0 0 640 230"></svg></div>
+    </div>
+    <div class="label">All Sites &mdash; Full Detail</div>
+    <div class="tw"><table><thead><tr><th data-sort="job">Job</th><th data-sort="po">PO #</th><th data-sort="trt">TRT #</th><th data-sort="location">Site</th><th data-sort="freight">Freight</th><th data-sort="sw">SWBD</th><th data-sort="tfx">Transformer</th><th data-sort="tfxDue">TFX due</th><th data-sort="brk">Breaker status</th><th data-sort="status">Status</th><th data-sort="cr">Constr. ready (Tesla)</th><th data-sort="cm">CM forecast</th><th data-sort="plan">REV planned ship</th><th>REV notes</th></tr></thead><tbody id="iBody"></tbody></table></div>
+  </div>
+</div>
+<div class="sb" id="sb"><div class="sheet" id="sheet"></div></div>
+<div id="tip"></div>
+
+<script>
+const SITES = [{"job":"M200489-01","n":"01","po":5101141186,"trt":"3406","freight":false,"location":"Golden, BC","address":null,"tfxQty":1,"kva":"1000","legs":"3-leg","tfxDue":"June 30th, 2026","variant":"A1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-12-26","cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":{"loc":"Golden, BC","config":"2 x 1,200A","b2000":"N/A","b1200":"Here","status":"Ready Now","revNotes":null,"tslaNotes":null}},{"job":"M200489-02","n":"02","po":5101141185,"trt":"58996","freight":false,"location":"Brampton, ON","address":null,"tfxQty":1,"kva":"1000 (Change to 1250 if Possible)","legs":"3-leg","tfxDue":"June 30th, 2026","variant":"B1","mainBreaker":1200,"readyFlag":true,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2027-07-01","cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"ON","breaker":{"loc":"Brampton, ON","config":"2 x 1,200A","b2000":"N/A","b1200":"Here","status":"Ready Now","revNotes":"Ready to ship","tslaNotes":null}},{"job":"M200489-03","n":"03","po":5101141187,"trt":"20740","freight":false,"location":"Alma, QC","address":"1095 du Pont sud, Alma, QC G8B 2V6","tfxQty":1,"kva":"1000","legs":"5-leg","tfxDue":"June 30th, 2026","variant":"C1","mainBreaker":1200,"readyFlag":true,"readyDateRaw":null,"anticipated":"2026-08-01","anticipatedBad":false,"constructionReady":"2026-08-01","cmForecast":"2026-10-05","planned":["2026-10-14"],"plannedRaw":"2026-10-14 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"QC","breaker":{"loc":"Alma, QC","config":"2 x 1,200A","b2000":"N/A","b1200":"Here","status":"Ready Now","revNotes":"Ready to ship","tslaNotes":null}},{"job":"M200489-04","n":"04","po":5101141189,"trt":"437261","freight":false,"location":"Deschambault,QC","address":"17 des Pins, Deschambault, QC G0A 1S0","tfxQty":2,"kva":"1000","legs":"5-leg","tfxDue":"June 30th, 2026","variant":"C2","mainBreaker":2000,"readyFlag":true,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2027-03-01","cmForecast":null,"planned":["2026-10-21","2026-10-23"],"plannedRaw":"10/21/2026 10-23/2026","plannedBad":false,"actualShip":null,"demoNote":null,"province":"QC","breaker":{"loc":"Pointe Claire, QC","config":"1 x 2,000A + 1 x 1,200A","b2000":"Here","b1200":"Here","status":"Ready Now","revNotes":"Ready to ship","tslaNotes":null}},{"job":"M200489-05","n":"05","po":5101339711,"trt":"407455","freight":true,"location":"Saint Simeon, QC","address":"747 Rte 138, Saint-Sim\u00e9on, QC G0T 1X0","tfxQty":1,"kva":"1000","legs":"5-leg","tfxDue":"September 16th, 2026","variant":"C1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-09-01","cmForecast":"2026-10-26","planned":["2026-10-26"],"plannedRaw":"2026-10-26 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"QC","breaker":{"loc":"Saint Simeon, QC","config":"2 x 1,200A","b2000":"N/A","b1200":"2026-11-15","status":"Ready by 11/15/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-06","n":"06","po":5101339712,"trt":"428553","freight":true,"location":"Louvicourt, QC","address":null,"tfxQty":1,"kva":"1000","legs":"5-leg","tfxDue":"September 16th, 2026","variant":"C1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2027-03-01","cmForecast":null,"planned":["2027-03-23"],"plannedRaw":"2027-03-23 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"QC","breaker":{"loc":"Louvicourt, QC","config":"2 x 1,200A","b2000":"N/A","b1200":"Here","status":"Ready Now","revNotes":"breakers allocated to -015","tslaNotes":null}},{"job":"M200489-07","n":"07","po":5101339714,"trt":"426062","freight":true,"location":"Terrebonne, QC","address":"3020 Ch. Gascon, Terrebonne, QC J6X 3Z3","tfxQty":1,"kva":"1000","legs":"5-leg","tfxDue":"September 16th, 2026","variant":"C1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":"2026-08-26","anticipatedBad":false,"constructionReady":"2026-08-01","cmForecast":"2026-09-28","planned":["2026-10-21","2026-10-23"],"plannedRaw":"10/21/2026 10/23/2026","plannedBad":false,"actualShip":null,"demoNote":null,"province":"QC","breaker":{"loc":"Terrebonne, QC","config":"2 x 1,200A","b2000":"N/A","b1200":"Here","status":"Ready Now","revNotes":"RTS 10/23/2026","tslaNotes":null}},{"job":"M200489-08","n":"08","po":5101362002,"trt":"437107","freight":true,"location":"Pointe Claire, QC","address":null,"tfxQty":2,"kva":"1000","legs":"5-leg","tfxDue":"August 26th, 2026","variant":"C2","mainBreaker":2000,"readyFlag":false,"readyDateRaw":null,"anticipated":"2026-07-26","anticipatedBad":false,"constructionReady":"2026-08-01","cmForecast":null,"planned":["2026-10-21","2026-10-23"],"plannedRaw":"10/21/2026 10/23/2026","plannedBad":false,"actualShip":null,"demoNote":null,"province":"QC","breaker":{"loc":"Deschambault, QC","config":"1 x 2,000A + 1 x 1,200A","b2000":"Here","b1200":"Here","status":"Ready Now","revNotes":"breaker arrived 09-25-2026 - RTS 10/23/2026 on site construction requested unit.","tslaNotes":null}},{"job":"M200489-09","n":"09","po":5101362003,"trt":"27304","freight":true,"location":"Laval, QC - Val des Brise","address":"4975 Blvd. Robert-Bourassa, Laval, Quebec H7E 0A0","tfxQty":2,"kva":"1000","legs":"5-leg","tfxDue":"August 26th, 2026","variant":"C2","mainBreaker":2000,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-09-01","cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"QC","breaker":{"loc":"Laval, QC - Val des Brise","config":"1 x 2,000A + 1 x 1,200A","b2000":"2026-12-15","b1200":"2026-12-15","status":"Ready by 12/15/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-10","n":"10","po":5101362004,"trt":"405219","freight":true,"location":"Quebec, QC - Galerie","address":"5401 Bd des Galeries, Qu\u00e9bec City, Quebec G2K 1N4","tfxQty":2,"kva":"1000","legs":"5-leg","tfxDue":"August 26th, 2026","variant":"C2","mainBreaker":2000,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-09-01","cmForecast":null,"planned":["2026-11-15"],"plannedRaw":"2026-11-15 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"QC","breaker":{"loc":"Quebec, QC - Galerie","config":"1 x 2,000A + 1 x 1,200A","b2000":"Here","b1200":"Here","status":"Ready Now","revNotes":null,"tslaNotes":null}},{"job":"M200489-11","n":"11","po":5101362005,"trt":"438662","freight":true,"location":"Montreal, QC - Jean Talon O","address":"5300 Rue Jean-Talon O, Montr\u00e9al, QC H4P 2T5","tfxQty":2,"kva":"1000","legs":"5-leg","tfxDue":"August 26th, 2026","variant":"C2","mainBreaker":2000,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-09-01","cmForecast":"2026-10-05","planned":["2026-11-15"],"plannedRaw":"2026-11-15 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"QC","breaker":{"loc":"Montreal, QC - Jean Talon O","config":"1 x 2,000A + 1 x 1,200A","b2000":"Here","b1200":"Here","status":"Ready Now","revNotes":null,"tslaNotes":null}},{"job":"M200489-12","n":"12","po":5101362942,"trt":"460952","freight":true,"location":"Tsawwassen, BC","address":null,"tfxQty":1,"kva":"1000","legs":"3-leg","tfxDue":"September 29th, 2026","variant":"A2","mainBreaker":2000,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":true,"constructionReady":"2026-06-26","cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":{"loc":"Tsawwassen, BC","config":"1 x 2,000A + 1 x 1,200A","b2000":"2026-12-15","b1200":"2026-12-15","status":"Ready by 12/15/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-13","n":"13","po":5101362943,"trt":"441805","freight":true,"location":"Kamloops, BC","address":"1055 Hillside Drive, Kamloops BC","tfxQty":1,"kva":"1000","legs":"3-leg","tfxDue":"September 29th, 2026","variant":"A2","mainBreaker":2000,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-10-26","cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":{"loc":"Kamloops, BC","config":"1 x 2,000A + 1 x 1,200A","b2000":"2026-12-15","b1200":"2026-12-15","status":"Ready by 12/15/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-14","n":"14","po":5101362946,"trt":"58867","freight":true,"location":"West Kelowna, BC","address":null,"tfxQty":1,"kva":"1000","legs":"3-leg","tfxDue":"September 29th, 2026","variant":"A1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-10-26","cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":{"loc":"West Kelowna, BC","config":"2 x 1,200A","b2000":"N/A","b1200":"2026-12-29","status":"Ready by 12/29/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-15","n":"15","po":5101396408,"trt":"404167","freight":true,"location":"Bathurst, NB","address":"5 Douglas Ave, Bathurst, NB","tfxQty":1,"kva":"1000","legs":"3-leg","tfxDue":"September 29th, 2026","variant":"B1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-09-01","cmForecast":"2026-09-28","planned":["2026-10-05","2026-10-23"],"plannedRaw":"10/5/2026 10/23/2026","plannedBad":false,"actualShip":null,"demoNote":null,"province":"NB","breaker":{"loc":"Bathurst, NB","config":"2 x 1,200A","b2000":"N/A","b1200":"2026-12-29","status":"Ready by 12/29/26","revNotes":"489-02 is being allocated as 489-15 - ready to ship. No confirmation from Tesla. Breakers from 489-06 allocated to 489-15 for RTS 10/23/2026","tslaNotes":null}},{"job":"M200489-16","n":"16","po":5101396409,"trt":"404013","freight":false,"location":"Campbellton, NB","address":null,"tfxQty":1,"kva":"1000","legs":"3-leg","tfxDue":"September 29th, 2026","variant":"B1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-10-19","cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"NB","breaker":{"loc":"Campbellton, NB","config":"2 x 1,200A","b2000":"N/A","b1200":"2026-12-29","status":"Ready by 12/29/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-17","n":"17","po":5101396411,"trt":"408354","freight":true,"location":"Woodstock, NB","address":null,"tfxQty":1,"kva":"1000 (Change to 1250 if Possible)","legs":"3-leg","tfxDue":"September 29th, 2026","variant":"B1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2027-04-01","cmForecast":null,"planned":["2027-04-15"],"plannedRaw":"2027-04-15 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"NB","breaker":{"loc":"Woodstock, NB","config":"2 x 1,200A","b2000":"N/A","b1200":"2026-12-29","status":"Ready by 12/29/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-18","n":"18","po":5101396412,"trt":"408652","freight":true,"location":"St John, NB","address":null,"tfxQty":1,"kva":"1000 (Change to 1250 if Possible)","legs":"3-leg","tfxDue":"September 29th, 2026","variant":"B1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2027-04-01","cmForecast":null,"planned":["2027-04-15"],"plannedRaw":"2027-04-15 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"NB","breaker":{"loc":"St John, NB","config":"2 x 1,200A","b2000":"N/A","b1200":"2026-12-29","status":"Ready by 12/29/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-19","n":"19","po":5101396413,"trt":"451020","freight":false,"location":"Port Hawkesbury, NS","address":null,"tfxQty":1,"kva":"1000","legs":"3-leg","tfxDue":"September 29th, 2026","variant":"B1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-10-01","cmForecast":null,"planned":["2027-01-12"],"plannedRaw":"2027-01-12 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"NS","breaker":{"loc":"Port Hawkesbury, NS","config":"2 x 1,200A","b2000":"N/A","b1200":"2026-12-29","status":"Ready by 12/29/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-20","n":"20","po":5101396414,"trt":"33996","freight":true,"location":"Waterloo, ON","address":"550 King St N, Waterloo, ON, Canada","tfxQty":1,"kva":"1000","legs":"3-leg","tfxDue":"September 29th, 2026","variant":"B1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2026-10-01","cmForecast":"2026-10-19","planned":["2027-01-12"],"plannedRaw":"2027-01-12 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"ON","breaker":{"loc":"Waterloo, ON","config":"2 x 1,200A","b2000":"N/A","b1200":"2026-12-29","status":"Ready by 12/29/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-21","n":"21","po":5101408552,"trt":"Multiple TBC","freight":false,"location":"SEMI DEMO Sites","address":null,"tfxQty":5,"kva":"1250","legs":"5-leg","tfxDue":"September 11th, 2026 September 18, 2026","variant":null,"mainBreaker":null,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":null,"cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":"1 to ship with Langley Board 1 to ship with new Kamloops job (new)","province":"Demo","breaker":{"loc":"SEMI DEMO Sites","config":"Undefined (Multiple TBC)","b2000":"N/A","b1200":"N/A","status":"Excluded","revNotes":"TX's 1 - Langley 1- Kamloops","tslaNotes":null}},{"job":"M200489-22","n":"22","po":5101414307,"trt":"58844","freight":true,"location":"London, ON","address":"109 Fanshawe Park Rd E, London, ON, Canada","tfxQty":1,"kva":"1000","legs":"3-leg","tfxDue":"September 29th, 2026","variant":"B1","mainBreaker":1200,"readyFlag":false,"readyDateRaw":"2026-07-24","anticipated":"2026-07-01","anticipatedBad":false,"constructionReady":"2026-09-01","cmForecast":"2026-10-05","planned":["2027-01-15"],"plannedRaw":"2027-01-15 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"ON","breaker":{"loc":"London, ON","config":"2 x 1,200A","b2000":"N/A","b1200":"2026-12-29","status":"Ready by 12/29/26","revNotes":null,"tslaNotes":null}},{"job":"M200489-23","n":"23","po":5101497849,"trt":"484327","freight":true,"location":"Langley, BC","address":null,"tfxQty":1,"kva":"1250","legs":"5-leg","tfxDue":null,"variant":"A2","mainBreaker":2000,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":"2027-01-07","cmForecast":"2026-11-25","planned":["2026-11-25"],"plannedRaw":"2026-11-25 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":{"loc":"Langley, BC","config":"1 x 2,000A + 1 x 1,200A","b2000":"Not Yet Provided","b1200":"TBD","status":"Awaiting Data","revNotes":"Breakers to be allocated to 04 - Pointe Claire","tslaNotes":null}},{"job":"M200489-24","n":"24","po":5101538763,"trt":null,"freight":true,"location":"Kamloops, BC","address":"310 Andover Crescent, Kamloops BC","tfxQty":1,"kva":"1250","legs":"5-leg","tfxDue":null,"variant":"A2","mainBreaker":2000,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":null,"cmForecast":null,"planned":["2027-01-15"],"plannedRaw":"2027-01-15 00:00:00","plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":null},{"job":"M200489-25","n":"25","po":5101552560,"trt":null,"freight":true,"location":"Abbotsford, BC","address":"32500 South Fraser W, Abbotsford BC","tfxQty":1,"kva":null,"legs":null,"tfxDue":null,"variant":null,"mainBreaker":null,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":null,"cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":null},{"job":"M200489-27","n":"27","po":5101552559,"trt":null,"freight":true,"location":"Nelson, Bc","address":"1150 Lakeside Dr, Nelson, BC","tfxQty":1,"kva":null,"legs":null,"tfxDue":null,"variant":null,"mainBreaker":null,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":null,"cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":null},{"job":"M200489-28","n":"28","po":5101552558,"trt":null,"freight":true,"location":"Dewson Greek, BC","address":"11000 8th St, Dawson Creek, BC","tfxQty":1,"kva":null,"legs":null,"tfxDue":null,"variant":null,"mainBreaker":null,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":null,"cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":null},{"job":"M200489-29","n":"29","po":5101552556,"trt":null,"freight":true,"location":"Rosedale, BC","address":"53022 Bunker Road, Rosedale, BC","tfxQty":1,"kva":null,"legs":null,"tfxDue":null,"variant":null,"mainBreaker":null,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":null,"cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":null},{"job":"M200489-30","n":"30","po":5101552543,"trt":null,"freight":true,"location":"Winnipeg, MB","address":"1665 Kenaston Blvd, Winnipeg, MB","tfxQty":1,"kva":null,"legs":null,"tfxDue":null,"variant":null,"mainBreaker":null,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":null,"cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"MB","breaker":null},{"job":"M200489-31","n":"31","po":5101552557,"trt":null,"freight":true,"location":"Kelowna, BC","address":"2090 Harvey Ave, Kelowna, BC","tfxQty":1,"kva":null,"legs":null,"tfxDue":null,"variant":null,"mainBreaker":null,"readyFlag":false,"readyDateRaw":null,"anticipated":null,"anticipatedBad":false,"constructionReady":null,"cmForecast":null,"planned":[],"plannedRaw":null,"plannedBad":false,"actualShip":null,"demoNote":null,"province":"BC","breaker":null}];
+const ASOF = '2026-10-08';
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt = iso => { if(!iso) return '—'; const d=new Date(iso+'T00:00:00'); return MON[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear(); };
+const fmtS = iso => { const d=new Date(iso+'T00:00:00'); return MON[d.getMonth()]+' '+d.getDate(); };
+const days = (a,b)=> Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = id => document.getElementById(id);
+const isInt = () => $('intl').classList.contains('active');
+
+const ST = [
+  {k:'Shipped', c:'var(--c-ship)', p:'p-ship'},
+  {k:'Ready to Ship', c:'var(--c-ready)', p:'p-ready'},
+  {k:'Ship Date Planned', c:'var(--c-plan)', p:'p-plan'},
+  {k:'Scheduled', c:'var(--c-sched)', p:'p-sched'},
+  {k:'Awaiting Details', c:'var(--c-wait)', p:'p-wait'},
+];
+const stInfo = k => ST.find(s=>s.k===k);
+const pill = s => `<span class="pill ${stInfo(s.status).p}">${s.status}</span>`;
+function brkDateOf(b){ const m=(b||'').match(/Ready by (\d+)\/(\d+)\/(\d+)/); return m ? `20${m[3]}-${String(m[1]).padStart(2,'0')}-${String(m[2]).padStart(2,'0')}` : null; }
+SITES.forEach(s=>{
+  s.pd = s.planned.length ? s.planned[s.planned.length-1] : null;
+  s.window = (s.planned.length===2 && days(s.planned[0],s.planned[1])>=0 && days(s.planned[0],s.planned[1])<=7) ? [s.planned[0],s.planned[1]] : null;
+  s.status = s.actualShip ? 'Shipped' : s.readyFlag ? 'Ready to Ship' : s.pd ? 'Ship Date Planned' : (s.variant ? 'Scheduled' : 'Awaiting Details');
+  s.brk = s.breaker ? s.breaker.status : null;
+  s.brkDate = brkDateOf(s.brk);
+});
+const byJob = {}; SITES.forEach(s=>byJob[s.job]=s);
+const planTxt = s => !s.pd ? (s.actualShip?'—':'TBD') : s.window ? fmtS(s.window[0])+' – '+fmtS(s.window[1])+', '+s.window[1].slice(0,4) : fmt(s.pd);
+const sw = s => s.variant ? s.variant+' · '+Number(s.mainBreaker).toLocaleString()+' A' : '—';
+const tfx = s => s.kva ? s.tfxQty+' × '+String(s.kva).replace(/\s*\(.*\)/,'')+' kVA' : s.tfxQty+' × TBC';
+const brkLabel = s => !s.brk ? '—' : s.brk==='Ready Now' ? 'Ready' : s.brkDate ? 'Expected '+fmtS(s.brkDate) : s.brk;
+const brkPill = s => { if(!s.brk) return '<span class="pill p-na">—</span>'; if(s.brk==='Ready Now') return '<span class="pill p-ok">Ready</span>'; if(s.brkDate) return `<span class="pill p-soon">Expected ${fmtS(s.brkDate)}</span>`; return '<span class="pill p-na">'+esc(s.brk)+'</span>'; };
+const brkGroup = s => !s.brk?'No data':s.brk==='Ready Now'?'Ready now':s.brkDate?'Expected later':s.brk;
+
+/* ---------- tooltip ---------- */
+const tip=$('tip');
+const showTip=(e,h)=>{tip.innerHTML=h;tip.style.display='block';tip.style.left=Math.min(e.clientX+14,innerWidth-230)+'px';tip.style.top=(e.clientY+14)+'px';};
+const hideTip=()=>{tip.style.display='none';};
+document.addEventListener('mousemove',e=>{const t=e.target.closest('[data-tip]'); if(t) showTip(e,t.dataset.tip); else hideTip();});
+
+/* ---------- flags (internal) ---------- */
+const FLAGS=[]; const flag=(t,m,job)=>FLAGS.push({t,m,job:job||null});
+const awaiting=SITES.filter(s=>s.status==='Awaiting Details');
+awaiting.forEach(s=>flag('t-hi',`<b>-${s.n} (${esc(s.location)}): no specifications yet</b> — no SWBD variant, kVA or dates.`,s.job));
+flag('t-md','<b>Job M200489-26 is missing</b> from the sequence (jobs run -01 to -31).');
+SITES.filter(s=>s.anticipatedBad).forEach(s=>flag('t-md',`<b>-${s.n}: invalid date</b> in Anticipated Ready Date (“9/31/2026”) — September has 30 days.`,s.job));
+SITES.filter(s=>s.window).forEach(s=>flag('t-lo',`<b>-${s.n}: planned ship is a window</b> (${planTxt(s)}) — dashboard shows the range.`,s.job));
+SITES.filter(s=>s.planned.length===2&&!s.window).forEach(s=>flag('t-md',`<b>-${s.n}: two planned dates</b> (${s.planned.map(fmtS).join(' and ')}) — dashboard uses the later one (${fmtS(s.pd)}). Confirm.`,s.job));
+SITES.filter(s=>s.breaker&&s.breaker.loc&&s.location&&s.breaker.loc.split(',')[0].trim().toLowerCase()!==s.location.split(',')[0].trim().toLowerCase()).forEach(s=>flag('t-hi',`<b>-${s.n}: site differs between tabs</b> — tracker says ${esc(s.location)}, breaker tab says ${esc(s.breaker.loc)}. Dashboard uses the tracker.`,s.job));
+SITES.filter(s=>s.readyDateRaw).forEach(s=>flag('t-md',`<b>-${s.n}: “Ready to be Shipped” holds a date</b> (${fmt(s.readyDateRaw)}), not a status; planned ship is ${planTxt(s)}. Shown as not ready.`,s.job));
+SITES.filter(s=>s.readyFlag&&s.breaker&&/allocated/i.test(s.breaker.revNotes||'')).forEach(s=>flag('t-md',`<b>-${s.n}: breakers allocated elsewhere</b> — ${esc(s.breaker.revNotes)}`,s.job));
+SITES.filter(s=>s.status!=='Shipped'&&s.pd&&days(ASOF,s.pd)<0).forEach(s=>flag('t-md',`<b>-${s.n}: planned ship date has passed</b> (${fmt(s.pd)}).`,s.job));
+SITES.filter(s=>s.status!=='Shipped'&&s.pd&&s.brkDate&&s.pd<s.brkDate).forEach(s=>flag('t-hi',`<b>-${s.n}: ship date is before the breakers</b> — planned ${planTxt(s)}, main breakers expected ${fmt(s.brkDate)}.`,s.job));
+flag('t-lo','<b>Breaker tab is dated Sep 9, 2026</b> — older than the main tracker; breaker dates may have moved.');
+flag('t-lo','<b>-21 (SEMI demo sites)</b>: 5 transformers across several sites; excluded from the breaker tab.','M200489-21');
+const siteFlags = job => FLAGS.filter(f=>f.job===job);
+
+/* ---------- detail sheet ---------- */
+const sbEl=$('sb'), sheetEl=$('sheet'); let SH={list:[],idx:-1};
+function closeSheet(){ sbEl.classList.remove('open'); }
+sbEl.addEventListener('click',e=>{ if(e.target===sbEl) closeSheet(); });
+document.addEventListener('keydown',e=>{ if(!sbEl.classList.contains('open')) return; if(e.key==='Escape') closeSheet(); if(e.key==='ArrowRight') stepSheet(1); if(e.key==='ArrowLeft') stepSheet(-1); });
+function frame(head,sub,body,nav){
+  sheetEl.innerHTML=`<div class="sh"><div><h3>${head}</h3><div class="ss">${sub}</div></div><div class="nav">${nav||''}<button class="ib" id="shX" title="Close">✕</button></div></div><div class="sbody">${body}</div>`;
+  $('shX').onclick=closeSheet; sbEl.classList.add('open'); sheetEl.querySelector('.sbody').scrollTop=0;
+  const p=$('shP'), n=$('shN'); if(p) p.onclick=()=>stepSheet(-1); if(n) n.onclick=()=>stepSheet(1);
+}
+function stepSheet(d){ const i=SH.idx+d; if(SH.list.length&&i>=0&&i<SH.list.length&&sheetEl.querySelector('#shP')) openSite(SH.list[i],SH.list); }
+const kv=(k,v)=>`<div class="kv"><span>${k}</span><b>${v}</b></div>`;
+function nextStep(s){
+  const d = s.pd ? days(ASOF,s.pd) : null, when = d==null?'':d===0?'today':d>0?`in ${d} day${d>1?'s':''}`:`${-d} day${d<-1?'s':''} ago`;
+  const bk = s.brkDate ? ` Main breakers are expected ${fmt(s.brkDate)}.` : '';
+  switch(s.status){
+    case 'Shipped': return `Shipped on ${fmt(s.actualShip)}.`;
+    case 'Ready to Ship': return `Built and ready to ship.${s.pd?` Planned ship ${planTxt(s)} (${when}).`:' Ship date is being confirmed.'}`;
+    case 'Ship Date Planned': return `Ship planned for ${planTxt(s)} (${when}).${bk}`;
+    case 'Scheduled': return `Specifications are confirmed; a ship date is still to be set.${bk}`;
+    default: return 'Site specifications are still to be confirmed.';
+  }
+}
+function timeline(s){
+  const bOk = s.brk==='Ready Now';
+  const steps=[
+    {t:'Order & specifications confirmed', d:s.variant?`${sw(s)} · ${tfx(s)}`:'Specifications to be confirmed', done:!!s.variant},
+    {t:'Main breakers', d:s.brk?(bOk?'Breakers on hand':s.brkDate?'Expected '+fmt(s.brkDate):esc(s.brk)):'No breaker information yet', done:bOk||s.status==='Shipped'},
+    {t:'Ready to ship', d:s.readyFlag?'Ready — '+(s.pd?'planned ship '+planTxt(s):'ship date being confirmed'):(s.pd?'Planned ship '+planTxt(s):'Not yet scheduled'), done:s.readyFlag||s.status==='Shipped'},
+    {t:'Shipped', d:s.actualShip?fmt(s.actualShip):'Awaiting shipment', done:!!s.actualShip},
+  ];
+  let cur=steps.findIndex(x=>!x.done);
+  return `<div class="tl">${steps.map((x,i)=>`<div class="st ${x.done?'done':i===cur?'cur':'todo'}"><div class="dot"></div><div><div class="tt">${x.t}</div><div class="td">${x.d}</div></div></div>`).join('')}</div>`;
+}
+function openSite(job, list){
+  const s=byJob[job], I=isInt(); SH={list:list||[job], idx:Math.max(0,(list||[job]).indexOf(job))};
+  const b=s.breaker;
+  const brkCard = `<div class="cd"><h4>Main breakers</h4>${b?kv('Configuration',esc(b.config))+kv('2,000 A',b.b2000==='Here'?'On hand':/^\d{4}-/.test(b.b2000||'')?fmt(b.b2000):esc(b.b2000||'—'))+kv('1,200 A',b.b1200==='Here'?'On hand':/^\d{4}-/.test(b.b1200||'')?fmt(b.b1200):esc(b.b1200||'—'))+kv('Overall',brkLabel(s)):'<div style="font-size:12.5px;color:var(--text-faint)">Not yet available</div>'}</div>`;
+  let body=`<div class="banner">${pill(s)}<div class="nx">${nextStep(s)}</div></div>
+    <div class="sec" style="margin-top:0">Progress</div>${timeline(s)}
+    <div class="sec">Details</div><div class="cards">
+      <div class="cd"><h4>Site</h4>${kv('Location',esc(s.location))}${kv('Province',s.province)}${kv('Address',esc(s.address||s.demoNote||'To be confirmed'))}${kv('PO number',s.po)}${I?kv('TRT #',esc(s.trt||'—'))+kv('Freight',s.freight?'Yes':'No'):''}</div>
+      <div class="cd"><h4>Switchboard</h4>${kv('Variant',s.variant||'TBC')}${kv('Main breaker',s.mainBreaker?Number(s.mainBreaker).toLocaleString()+' A':'TBC')}</div>
+      <div class="cd"><h4>Transformer</h4>${kv('Quantity',s.tfxQty)}${kv('Capacity',s.kva?esc(String(s.kva).replace(/\s*\(.*\)/,''))+' kVA':'TBC')}${kv('Type',s.legs||'TBC')}${kv('Due',esc(s.tfxDue||'TBC'))}</div>
+      ${brkCard}
+      <div class="cd" style="grid-column:1/-1"><h4>Dates</h4><div class="cards" style="gap:0 24px">
+        <div>${kv('Site ready (Tesla)',fmt(s.constructionReady))}${I?kv('Anticipated ready',s.anticipatedBad?'Invalid date':fmt(s.anticipated)):''}</div>
+        <div>${I?kv('CM forecast',fmt(s.cmForecast)):''}${kv('Planned ship',planTxt(s))}${kv('Shipped',fmt(s.actualShip))}</div></div></div>
+    </div>`;
+  if(I){
+    const notes=[]; if(b&&b.revNotes) notes.push('<b>REV:</b> '+esc(b.revNotes)); if(b&&b.tslaNotes) notes.push('<b>Tesla:</b> '+esc(b.tslaNotes));
+    if(s.kva&&/change/i.test(s.kva)) notes.push('<b>Capacity note:</b> '+esc(s.kva));
+    if(notes.length) body+=`<div class="sec">Notes</div>`+notes.map(n=>`<div class="nbox">${n}</div>`).join('');
+    const f=siteFlags(job); if(f.length) body+=`<div class="sec">Data checks for this site</div>`+f.map(x=>`<div class="flag"><span class="tag ${x.t}">${x.t==='t-hi'?'CHECK':x.t==='t-md'?'REVIEW':'NOTE'}</span><span>${x.m}</span></div>`).join('');
+  } else if(s.kva&&/change/i.test(s.kva)) body+=`<div class="sec">Notes</div><div class="nbox">Capacity: ${esc(s.kva)}</div>`;
+  const n=SH.list.length>1;
+  frame(`${s.job}`, `${esc(s.location)} · ${s.province}${I?' · <b style="color:#92400E">Internal</b>':''}`, body, n?`<button class="ib" id="shP" ${SH.idx<=0?'disabled':''} title="Previous (←)">‹</button><button class="ib" id="shN" ${SH.idx>=SH.list.length-1?'disabled':''} title="Next (→)">›</button>`:'');
+}
+function openList(title, sub, sites, extra){
+  const list=sites.map(s=>s.job), cnt=ST.map(x=>[x.k,sites.filter(s=>s.status===x.k).length]).filter(x=>x[1]);
+  const body=`<div class="mini">${cnt.map(c=>`<div><b>${c[1]}</b>${c[0]}</div>`).join('')}</div>${extra||''}`+
+    sites.map(s=>`<div class="lrow" data-open="${s.job}"><span class="mono">${s.job}</span><div class="lm"><b>${esc(s.location)}</b><span>${sw(s)} · ${tfx(s)} · Planned ${planTxt(s)}</span></div>${pill(s)}</div>`).join('');
+  frame(title, sub, body||'<div style="color:var(--text-faint)">No sites.</div>');
+  sheetEl.querySelectorAll('[data-open]').forEach(r=>r.onclick=()=>openSite(r.dataset.open,list));
+}
+/* chart / flag clicks */
+document.addEventListener('click',e=>{
+  const m=e.target.closest('[data-month]'); if(m){ const mo=m.dataset.month, ss=SITES.filter(s=>s.pd&&s.pd.slice(0,7)===mo).sort((a,b)=>a.pd.localeCompare(b.pd));
+    openList(`${MON[+mo.slice(5)-1]} ${mo.slice(0,4)} — planned shipments`, `${ss.length} site${ss.length>1?'s':''} with a planned ship date this month`, ss); return; }
+  const p=e.target.closest('[data-prov]'); if(p){ const pv=p.dataset.prov, st=p.dataset.st||null, ss=SITES.filter(s=>s.province===pv&&(!st||s.status===st));
+    openList((pv==='Demo'?'Demo sites':pv)+(st?' — '+st:''), `${ss.length} site${ss.length>1?'s':''}`, ss); return; }
+  const bk=e.target.closest('[data-brk]'); if(bk){ const g=bk.dataset.brk, ss=SITES.filter(s=>brkGroup(s)===g); openList('Breakers: '+g, `${ss.length} site${ss.length>1?'s':''} · per Breaker Delivery tab (Sep 9, 2026)`, ss); return; }
+  const f=e.target.closest('.flag[data-job]'); if(f){ openSite(f.dataset.job, FLAGS.filter(x=>x.job).map(x=>x.job).filter((v,i,a)=>a.indexOf(v)===i)); }
+});
+
+/* ---------- sorting / csv ---------- */
+const brkRank = s => s.brk==='Ready Now'?'0':s.brkDate?'1'+s.brkDate:'9';
+const SV = {job:s=>s.job, location:s=>s.location.toLowerCase(), sw:s=>s.variant||'~', tfx:s=>s.tfxQty*10000+(parseInt(s.kva)||0), brk:brkRank, status:s=>ST.findIndex(x=>x.k===s.status),
+  plan:s=>s.pd||'9999', ship:s=>s.actualShip||'9999', po:s=>s.po, trt:s=>+s.trt||0, freight:s=>s.freight?1:0, tfxDue:s=>s.tfxDue||'~', cr:s=>s.constructionReady||'9999', cm:s=>s.cmForecast||'9999'};
+const sortRows=(rows,st)=>rows.slice().sort((a,b)=>{const x=SV[st.k](a),y=SV[st.k](b); return (x<y?-1:x>y?1:a.job.localeCompare(b.job))*st.d;});
+function markSort(tbl,st){ tbl.querySelectorAll('th[data-sort]').forEach(th=>{ th.textContent=th.textContent.replace(/ [▲▼]$/,''); if(th.dataset.sort===st.k) th.textContent+=st.d>0?' ▲':' ▼'; }); }
+function csv(name,head,rows){ const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"'; const t=[head,...rows].map(r=>r.map(q).join(',')).join('\r\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'})); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500); }
+
+/* ---------- customer ---------- */
+const cf = {status:null, kpi:null}; let cSort={k:'job',d:1}, cRows=[];
+const next30 = s => s.status!=='Shipped' && s.pd && days(ASOF,s.pd)>=0 && days(ASOF,s.pd)<=30;
+const N = SITES.length, nShip = SITES.filter(s=>s.status==='Shipped').length, nReady = SITES.filter(s=>s.status==='Ready to Ship').length;
+const nSoon = SITES.filter(next30).length, nTfx = SITES.reduce((a,s)=>a+(s.tfxQty||0),0);
+const KP = [
+  {key:'all', v:N, l:'Sites On Order', s:nTfx+' transformers · PO 489'},
+  {key:'shipped', v:nShip, l:'Shipped To Date', s:Math.round(nShip/N*100)+'% of order'},
+  {key:'ready', v:nReady, l:'Ready to Ship', s:'built and awaiting shipment'},
+  {key:'soon', v:nSoon, l:'Planned to Ship (30 days)', s:'planned by '+fmt('2026-11-07')},
+];
+const kpiMatch = s => cf.kpi==='shipped'?s.status==='Shipped':cf.kpi==='ready'?s.status==='Ready to Ship':cf.kpi==='soon'?next30(s):true;
+const cK=$('cKpis');
+KP.forEach(k=>{const d=document.createElement('div');d.className='kpi';d.dataset.key=k.key;d.innerHTML=`<div class="v">${k.v}</div><div class="l">${k.l}</div><div class="s">${k.s} &middot; <span style="color:var(--rev-blue);font-weight:700">View sites →</span></div>`;
+  d.onclick=()=>{ const ss=SITES.filter(s=>k.key==='all'||(k.key==='shipped'?s.status==='Shipped':k.key==='ready'?s.status==='Ready to Ship':next30(s)));
+    openList(k.l, k.s, k.key==='soon'?ss.sort((a,b)=>a.pd.localeCompare(b.pd)):ss); }; cK.appendChild(d);});
+
+function cStack(){
+  const el=$('cStack'); el.innerHTML='';
+  ST.forEach(s=>{const n=SITES.filter(x=>x.status===s.k).length; if(!n) return;
+    const d=document.createElement('div'); d.style.cssText=`flex:${n};background:${s.c};${s.k==='Awaiting Details'||s.k==='Scheduled'?'color:#1f2937':''}`; d.textContent=n;
+    d.dataset.tip=`<b>${s.k}</b><br>${n} of ${N} sites · click for details`; d.style.opacity=(cf.status&&cf.status!==s.k)?.4:1;
+    d.onclick=()=>{ cf.status=cf.status===s.k?null:s.k; cStack(); cTable(); if(cf.status) openList(s.k, `${n} of ${N} sites`, SITES.filter(x=>x.status===s.k)); }; el.appendChild(d);});
+  $('cLegend').innerHTML=ST.map(s=>`<span data-k="${s.k}"><i style="background:${s.c}"></i>${s.k} (${SITES.filter(x=>x.status===s.k).length})</span>`).join('');
+  document.querySelectorAll('#cLegend span').forEach(e=>e.onclick=()=>{cf.status=cf.status===e.dataset.k?null:e.dataset.k; cStack(); cTable();});
+}
+function monthChart(){
+  const by={}; SITES.filter(s=>s.pd).forEach(s=>{const m=s.pd.slice(0,7); by[m]=(by[m]||0)+1;});
+  const keys=Object.keys(by).sort(), W=640,H=230,pl=34,pr=34,pt=18,pb=40, pw=W-pl-pr, ph=H-pt-pb;
+  const max=Math.max(...Object.values(by),1), top=Math.ceil(max/4)*4, tot=SITES.filter(s=>s.pd).length, totTop=Math.ceil(tot/5)*5;
+  let g='',cum=0,pts=[]; const slot=pw/keys.length,bw=Math.min(slot*.55,44);
+  for(let i=0;i<=4;i++){const y=pt+ph-ph*i/4; g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#EEF2F7"/><text class="ax" x="${pl-6}" y="${y+3}" text-anchor="end">${+(top*i/4).toFixed(1)}</text><text class="ax" x="${W-pr+6}" y="${y+3}">${+(totTop*i/4).toFixed(1)}</text>`;}
+  keys.forEach((m,i)=>{const x=pl+slot*i+slot/2, h=ph*by[m]/top; cum+=by[m]; pts.push([x,pt+ph-ph*cum/totTop]);
+    g+=`<rect data-month="${m}" data-tip="<b>${MON[+m.slice(5)-1]} ${m.slice(0,4)}</b><br>${by[m]} sites planned<br>${cum} planned to date<br><i>Click for the site list</i>" x="${x-bw/2}" y="${pt+ph-h}" width="${bw}" height="${h}" rx="3" fill="#1D4E89"/>`;
+    g+=`<text class="ax" x="${x}" y="${H-24}" text-anchor="middle">${MON[+m.slice(5)-1]} ${m.slice(2,4)}</text><text x="${x}" y="${pt+ph-h-5}" text-anchor="middle" font-size="11" font-weight="700" fill="#0B2545" pointer-events="none">${by[m]}</text>`;});
+  g+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#D9A441" stroke-width="2.5" stroke-linejoin="round" pointer-events="none"/>`+pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#D9A441" stroke="#fff" stroke-width="1.5" pointer-events="none"/>`).join('');
+  $('cMonth').innerHTML=g+`<text class="ax" x="4" y="${H-1}">Sites / month (bars)</text><text class="ax" x="${W-pr+6}" y="${H-1}" text-anchor="end">Cumulative (line)</text>`;
+}
+function provChart(){
+  const order=['BC','QC','ON','NB','NS','MB','Demo','TBD']; const by={}; SITES.forEach(s=>{(by[s.province]=by[s.province]||[]).push(s);});
+  const rows=order.filter(p=>by[p]).sort((a,b)=>by[b].length-by[a].length), W=640,H=230,pl=84,pr=20,pt=8,rh=(H-pt-6)/rows.length, max=Math.max(...rows.map(p=>by[p].length)), pw=W-pl-pr;
+  let g='';
+  rows.forEach((p,i)=>{const y=pt+i*rh; let x=pl; g+=`<text data-prov="${p}" x="${pl-8}" y="${y+rh/2+3}" text-anchor="end" style="font-size:11.5px;fill:#475569;font-weight:600;cursor:pointer">${p==='Demo'?'Demo sites':p}</text>`;
+    ST.forEach(s=>{const n=by[p].filter(q=>q.status===s.k).length; if(!n) return; const w=pw*n/max;
+      g+=`<rect data-prov="${p}" data-st="${s.k}" data-tip="<b>${p==='Demo'?'Demo sites':p}</b> · ${s.k}<br>${n} site${n>1?'s':''}<br><i>Click for details</i>" x="${x}" y="${y+4}" width="${w-1.5}" height="${rh-9}" rx="3" fill="${s.c}"/>`; x+=w;});
+    g+=`<text x="${x+5}" y="${y+rh/2+4}" font-size="11.5" font-weight="700" fill="#0B2545" pointer-events="none">${by[p].length}</text>`;});
+  $('cProv').innerHTML=g;
+}
+const pSel=$('cProvSel'), sSel=$('cStatSel');
+pSel.innerHTML='<option value="">All provinces</option>'+[...new Set(SITES.map(s=>s.province))].map(p=>`<option>${p}</option>`).join('');
+sSel.innerHTML='<option value="">All statuses</option>'+ST.map(s=>`<option>${s.k}</option>`).join('');
+function cTable(){
+  sSel.value=cf.status||'';
+  const q=$('cQ').value.trim().toLowerCase();
+  cRows=sortRows(SITES.filter(s=>(!cf.status||s.status===cf.status)&&(!pSel.value||s.province===pSel.value)&&(!q||(s.job+' '+s.location+' '+s.po+' '+(s.address||'')).toLowerCase().includes(q))),cSort);
+  $('cCount').textContent=cRows.length+' of '+N+' sites';
+  $('cChips').innerHTML=cf.status?`<span class="chip">${cf.status}<b id="cx">&times;</b></span>`:''; if(cf.status) $('cx').onclick=()=>{cf.status=null;cStack();cTable();};
+  const tb=$('cBody'); tb.innerHTML='';
+  const list=cRows.map(s=>s.job);
+  cRows.forEach(s=>{
+    const tr=document.createElement('tr'); tr.className='row';
+    tr.innerHTML=`<td style="width:22px;color:#94A3B8">›</td><td class="mono">${s.job}</td><td><b>${esc(s.location)}</b></td><td>${sw(s)}</td><td>${tfx(s)}</td><td>${brkPill(s)}</td><td>${pill(s)}</td><td>${planTxt(s)}</td><td>${fmt(s.actualShip)}</td>`;
+    tr.onclick=()=>openSite(s.job,list); tb.appendChild(tr);
+  });
+  markSort($('cBody').closest('table'),cSort);
+}
+document.querySelectorAll('#cust th[data-sort]').forEach(th=>th.onclick=()=>{ cSort=cSort.k===th.dataset.sort?{k:cSort.k,d:-cSort.d}:{k:th.dataset.sort,d:1}; cTable(); });
+pSel.onchange=cTable; sSel.onchange=()=>{cf.status=sSel.value||null; cStack(); cTable();}; $('cQ').oninput=cTable;
+$('cCsv').onclick=()=>csv('Tesla_PO489_sites.csv',['Job','Site','Province','PO','Switchboard','Transformer','Breakers','Status','Planned ship','Shipped'],cRows.map(s=>[s.job,s.location,s.province,s.po,sw(s),tfx(s),brkLabel(s),s.status,planTxt(s),s.actualShip||'']));
+cStack(); monthChart(); provChart(); cTable();
+
+/* ---------- internal ---------- */
+const brkCounts=(()=>{const c={}; SITES.forEach(s=>{const k=brkGroup(s); c[k]=(c[k]||0)+1;}); return c;})();
+const nPlan=SITES.filter(s=>s.status==='Ship Date Planned'||s.status==='Ready to Ship').length, nChk=FLAGS.filter(f=>f.t!=='t-lo').length;
+function flagList(){ return FLAGS.map(f=>`<div class="flag" ${f.job?`data-job="${f.job}"`:''}><span class="tag ${f.t}">${f.t==='t-hi'?'CHECK':f.t==='t-md'?'REVIEW':'NOTE'}</span><span>${f.m}</span></div>`).join(''); }
+$('iFlags').innerHTML=flagList();
+const IK=[
+  {v:N,l:'Job lines on PO 489',s:nTfx+' transformers',go:()=>openList('All job lines on PO 489',`${N} job lines · ${nTfx} transformers`,SITES)},
+  {v:nPlan,l:'With a ship plan',s:nReady+' ready to ship',go:()=>openList('Sites with a ship plan',`${nPlan} sites`,SITES.filter(s=>s.status==='Ship Date Planned'||s.status==='Ready to Ship').sort((a,b)=>(a.pd||'9').localeCompare(b.pd||'9')))},
+  {v:(brkCounts['Ready now']||0)+' / '+(brkCounts['Expected later']||0),l:'Breakers ready / expected later',s:'per Breaker Delivery tab',go:()=>openList('Breakers expected later','Sites still waiting on breakers',SITES.filter(s=>brkGroup(s)==='Expected later').sort((a,b)=>a.brkDate.localeCompare(b.brkDate)))},
+  {v:nChk,l:'Items to confirm',s:'click to review',go:()=>frame('Items to confirm',`${nChk} items need a decision · ${FLAGS.length-nChk} notes`,`<div id="fl">${flagList()}</div>`)},
+];
+$('iKpis').innerHTML=''; IK.forEach(k=>{const d=document.createElement('div'); d.className='kpi'; d.innerHTML=`<div class="v">${k.v}</div><div class="l">${k.l}</div><div class="s">${k.s} &middot; <span style="color:var(--rev-blue);font-weight:700">Open →</span></div>`; d.onclick=k.go; $('iKpis').appendChild(d);});
+(function(){const ks=Object.keys(brkCounts), cols={'Ready now':'#15803D','Expected later':'#D9A441','Awaiting Data':'#94A3B8','Excluded':'#CBD5E1','No data':'#E2E8F0'}, rh=34,pl=110,pw=440; const max=Math.max(...Object.values(brkCounts)); let g='';
+  ks.forEach((k,i)=>{const y=10+i*rh,w=pw*brkCounts[k]/max; g+=`<text data-brk="${k}" x="${pl-10}" y="${y+rh/2+2}" text-anchor="end" font-size="12" fill="#475569" font-weight="600" style="cursor:pointer">${k}</text><rect data-brk="${k}" x="${pl}" y="${y+4}" width="${w}" height="${rh-12}" rx="4" fill="${cols[k]||'#94A3B8'}" data-tip="${k}: ${brkCounts[k]} sites<br><i>Click for the list</i>"/><text x="${pl+w+6}" y="${y+rh/2+3}" font-size="12" font-weight="700" fill="#0B2545" pointer-events="none">${brkCounts[k]}</text>`;});
+  $('iBrk').innerHTML=g;})();
+const iS=$('iStatSel'); iS.innerHTML='<option value="">All statuses</option>'+ST.map(s=>`<option>${s.k}</option>`).join('');
+let iSort={k:'job',d:1}, iRows=[];
+function iTable(){
+  const q=$('iQ').value.trim().toLowerCase();
+  iRows=sortRows(SITES.filter(s=>(!iS.value||s.status===iS.value)&&(!q||(s.job+' '+s.location+' '+s.po+' '+(s.trt||'')).toLowerCase().includes(q))),iSort);
+  $('iCount').textContent=iRows.length+' of '+N+' job lines';
+  const tb=$('iBody'); tb.innerHTML=''; const list=iRows.map(s=>s.job);
+  iRows.forEach(s=>{const tr=document.createElement('tr'); tr.className='row';
+    tr.innerHTML=`<td class="mono">${s.job}</td><td>${s.po}</td><td>${esc(s.trt||'—')}</td><td><b>${esc(s.location)}</b></td><td>${s.freight?'Yes':'No'}</td><td>${sw(s)}</td><td>${tfx(s)}</td><td>${esc(s.tfxDue||'—')}</td><td>${brkPill(s)}</td><td>${pill(s)}</td><td>${fmt(s.constructionReady)}</td><td>${fmt(s.cmForecast)}</td><td>${planTxt(s)}</td><td class="nt">${esc(s.breaker&&s.breaker.revNotes||'')}</td>`;
+    tr.onclick=()=>openSite(s.job,list); tb.appendChild(tr);});
+  markSort($('iBody').closest('table'),iSort);
+}
+document.querySelectorAll('#intl th[data-sort]').forEach(th=>th.onclick=()=>{ iSort=iSort.k===th.dataset.sort?{k:iSort.k,d:-iSort.d}:{k:th.dataset.sort,d:1}; iTable(); });
+iS.onchange=iTable; $('iQ').oninput=iTable; iTable();
+$('iCsv').onclick=()=>csv('Tesla_PO489_internal.csv',['Job','PO','TRT','Site','Freight','SWBD','Transformer','TFX due','Breaker status','Status','Construction ready (Tesla)','CM forecast','REV planned ship','REV notes'],iRows.map(s=>[s.job,s.po,s.trt||'',s.location,s.freight?'Yes':'No',sw(s),tfx(s),s.tfxDue||'',brkLabel(s),s.status,s.constructionReady||'',s.cmForecast||'',planTxt(s),s.breaker&&s.breaker.revNotes||'']));
+
+/* ---------- view switch ---------- */
+const bC=$('bC'), bI=$('bI'), nt=$('note');
+bC.onclick=()=>{closeSheet();bC.classList.add('active');bI.classList.remove('active');$('cust').classList.add('active');$('intl').classList.remove('active');nt.textContent='Customer view · data as of Oct 8, 2026';};
+bI.onclick=()=>{closeSheet();bI.classList.add('active');bC.classList.remove('active');$('intl').classList.add('active');$('cust').classList.remove('active');nt.textContent='Internal view · not for customer distribution';};
+
+</script>
+</body>
+</html>
