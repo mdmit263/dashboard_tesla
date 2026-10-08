@@ -135,7 +135,7 @@
       <div class="panel"><h2>Sites by province</h2><div class="ps">Click a bar or province for its sites</div><svg id="cProv" width="100%" viewBox="0 0 640 230"></svg></div>
     </div>
     <div class="label">Site List<span style="text-transform:none;font-weight:600;color:var(--text-faint);letter-spacing:0"> &mdash; click a site for full details; click a column to sort</span></div>
-    <div class="toolbar"><input id="cQ" placeholder="Search site, job or PO&hellip;"><select id="cProvSel"></select><select id="cStatSel"></select><span id="cChips"></span><button class="btn" id="cCsv">Export CSV</button><div class="count" id="cCount"></div></div>
+    <div class="toolbar"><input id="cQ" placeholder="Search site, job or PO&hellip;"><select id="cProvSel"></select><select id="cStatSel"></select><span id="cChips"></span><div class="count" id="cCount"></div></div>
     <div class="tw"><table><thead><tr><th></th><th data-sort="job">Job</th><th data-sort="location">Site</th><th data-sort="sw">Switchboard</th><th data-sort="tfx">Transformer</th><th data-sort="brk">Breakers</th><th data-sort="status">Status</th><th data-sort="plan">Planned Ship</th><th data-sort="ship">Shipped</th></tr></thead><tbody id="cBody"></tbody></table></div>
     <div class="fn">Planned Ship is REV's current plan and may move. A date range means the shipment window. &ldquo;Awaiting Details&rdquo; = site specifications still to be confirmed.</div>
     <div class="foot">Questions about your order? Contact your <b>REV Engineering</b> account team.</div>
@@ -153,7 +153,7 @@
       <div class="panel"><h2>Breaker readiness</h2><div class="ps">From the Breaker Delivery tab</div><svg id="iBrk" width="100%" viewBox="0 0 640 230"></svg></div>
     </div>
     <div class="label">All Sites &mdash; Full Detail</div>
-    <div class="toolbar"><input id="iQ" placeholder="Search site, job, PO or TRT&hellip;"><select id="iStatSel"></select><button class="btn" id="iCsv">Export CSV</button><div class="count" id="iCount"></div></div>
+    <div class="toolbar"><input id="iQ" placeholder="Search site, job, PO or TRT&hellip;"><select id="iStatSel"></select><div class="count" id="iCount"></div></div>
     <div class="tw"><table><thead><tr><th data-sort="job">Job</th><th data-sort="po">PO #</th><th data-sort="trt">TRT #</th><th data-sort="location">Site</th><th data-sort="freight">Freight</th><th data-sort="sw">SWBD</th><th data-sort="tfx">Transformer</th><th data-sort="tfxDue">TFX due</th><th data-sort="brk">Breaker status</th><th data-sort="status">Status</th><th data-sort="cr">Constr. ready (Tesla)</th><th data-sort="cm">CM forecast</th><th data-sort="plan">REV planned ship</th><th>REV notes</th></tr></thead><tbody id="iBody"></tbody></table></div>
   </div>
 </div>
@@ -300,8 +300,6 @@ const SV = {job:s=>s.job, location:s=>s.location.toLowerCase(), sw:s=>s.variant|
   plan:s=>s.pd||'9999', ship:s=>s.actualShip||'9999', po:s=>s.po, trt:s=>+s.trt||0, freight:s=>s.freight?1:0, tfxDue:s=>s.tfxDue||'~', cr:s=>s.constructionReady||'9999', cm:s=>s.cmForecast||'9999'};
 const sortRows=(rows,st)=>rows.slice().sort((a,b)=>{const x=SV[st.k](a),y=SV[st.k](b); return (x<y?-1:x>y?1:a.job.localeCompare(b.job))*st.d;});
 function markSort(tbl,st){ tbl.querySelectorAll('th[data-sort]').forEach(th=>{ th.textContent=th.textContent.replace(/ [▲▼]$/,''); if(th.dataset.sort===st.k) th.textContent+=st.d>0?' ▲':' ▼'; }); }
-function csv(name,head,rows){ const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"'; const t=[head,...rows].map(r=>r.map(q).join(',')).join('\r\n');
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'})); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500); }
 
 /* ---------- customer ---------- */
 const cf = {status:null, kpi:null}; let cSort={k:'job',d:1}, cRows=[];
@@ -371,7 +369,6 @@ function cTable(){
 }
 document.querySelectorAll('#cust th[data-sort]').forEach(th=>th.onclick=()=>{ cSort=cSort.k===th.dataset.sort?{k:cSort.k,d:-cSort.d}:{k:th.dataset.sort,d:1}; cTable(); });
 pSel.onchange=cTable; sSel.onchange=()=>{cf.status=sSel.value||null; cStack(); cTable();}; $('cQ').oninput=cTable;
-$('cCsv').onclick=()=>csv('Tesla_PO489_sites.csv',['Job','Site','Province','PO','Switchboard','Transformer','Breakers','Status','Planned ship','Shipped'],cRows.map(s=>[s.job,s.location,s.province,s.po,sw(s),tfx(s),brkLabel(s),s.status,planTxt(s),s.actualShip||'']));
 cStack(); monthChart(); provChart(); cTable();
 
 /* ---------- internal ---------- */
@@ -403,7 +400,6 @@ function iTable(){
 }
 document.querySelectorAll('#intl th[data-sort]').forEach(th=>th.onclick=()=>{ iSort=iSort.k===th.dataset.sort?{k:iSort.k,d:-iSort.d}:{k:th.dataset.sort,d:1}; iTable(); });
 iS.onchange=iTable; $('iQ').oninput=iTable; iTable();
-$('iCsv').onclick=()=>csv('Tesla_PO489_internal.csv',['Job','PO','TRT','Site','Freight','SWBD','Transformer','TFX due','Breaker status','Status','Construction ready (Tesla)','CM forecast','REV planned ship','REV notes'],iRows.map(s=>[s.job,s.po,s.trt||'',s.location,s.freight?'Yes':'No',sw(s),tfx(s),s.tfxDue||'',brkLabel(s),s.status,s.constructionReady||'',s.cmForecast||'',planTxt(s),s.breaker&&s.breaker.revNotes||'']));
 
 /* ---------- view switch ---------- */
 const bC=$('bC'), bI=$('bI'), nt=$('note');
