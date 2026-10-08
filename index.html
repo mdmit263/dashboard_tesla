@@ -135,6 +135,7 @@
       <div class="panel"><h2>Sites by province</h2><div class="ps">Click a bar or province for its sites</div><svg id="cProv" width="100%" viewBox="0 0 640 230"></svg></div>
     </div>
     <div class="label">Site List<span style="text-transform:none;font-weight:600;color:var(--text-faint);letter-spacing:0"> &mdash; click a site for full details; click a column to sort</span></div>
+    <div class="toolbar"><input id="cQ" placeholder="Search site, job or PO&hellip;"><select id="cProvSel"></select><select id="cStatSel"></select><span id="cChips"></span><button class="btn" id="cCsv">Export CSV</button><div class="count" id="cCount"></div></div>
     <div class="tw"><table><thead><tr><th></th><th data-sort="job">Job</th><th data-sort="location">Site</th><th data-sort="sw">Switchboard</th><th data-sort="tfx">Transformer</th><th data-sort="brk">Breakers</th><th data-sort="status">Status</th><th data-sort="plan">Planned Ship</th><th data-sort="ship">Shipped</th></tr></thead><tbody id="cBody"></tbody></table></div>
     <div class="fn">Planned Ship is REV's current plan and may move. A date range means the shipment window. &ldquo;Awaiting Details&rdquo; = site specifications still to be confirmed.</div>
     <div class="foot">Questions about your order? Contact your <b>REV Engineering</b> account team.</div>
@@ -152,6 +153,7 @@
       <div class="panel"><h2>Breaker readiness</h2><div class="ps">From the Breaker Delivery tab</div><svg id="iBrk" width="100%" viewBox="0 0 640 230"></svg></div>
     </div>
     <div class="label">All Sites &mdash; Full Detail</div>
+    <div class="toolbar"><input id="iQ" placeholder="Search site, job, PO or TRT&hellip;"><select id="iStatSel"></select><button class="btn" id="iCsv">Export CSV</button><div class="count" id="iCount"></div></div>
     <div class="tw"><table><thead><tr><th data-sort="job">Job</th><th data-sort="po">PO #</th><th data-sort="trt">TRT #</th><th data-sort="location">Site</th><th data-sort="freight">Freight</th><th data-sort="sw">SWBD</th><th data-sort="tfx">Transformer</th><th data-sort="tfxDue">TFX due</th><th data-sort="brk">Breaker status</th><th data-sort="status">Status</th><th data-sort="cr">Constr. ready (Tesla)</th><th data-sort="cm">CM forecast</th><th data-sort="plan">REV planned ship</th><th>REV notes</th></tr></thead><tbody id="iBody"></tbody></table></div>
   </div>
 </div>
